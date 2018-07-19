@@ -57,6 +57,21 @@ class User(BaseModel):
             return User.get(user_id=uid)
         except User.DoesNotExist:
             return
+          
+    @classmethod
+    def from_archive(cls, user, user_tag):
+        username, discriminator = user_tag.split("#")
+        discriminator = int(discriminator)
+      
+        obj, _ = cls.get_or_create(
+            user_id=user,
+            defaults={
+                'username': username,
+                'discriminator': discriminator,
+                'bot': False
+            })
+            
+        return obj
 
     @classmethod
     def from_disco_user(cls, user, should_update=True):
@@ -81,6 +96,10 @@ class User(BaseModel):
 
             if obj.avatar != user.avatar:
                 updates['avatar'] = user.avatar
+
+            # This can be wrong when we're creating from archives.
+            if obj.bot != user.bot:
+                updates['bot'] = user.bot
 
             if updates:
                 cls.update(**updates).where(User.user_id == user.id).execute()
@@ -161,6 +180,23 @@ class Infraction(BaseModel):
     @staticmethod
     def infractions_config(event):
         return getattr(event.base_config.plugins, 'infractions', None)
+
+    @classmethod
+    def load_archived(cls, event, user, user_tag, actor, actor_tag, type_, reason):
+        User.from_archive(user, user_tag)
+        User.from_archive(actor, actor_tag)
+
+        load_time = datetime.utcnow()
+
+        cls.create(
+            guild_id=event.guild.id,
+            user_id=user,
+            actor_id=actor,
+            type_={i.name: i.index for i in Infraction.Types.attrs}[type_],
+            reason=reason,
+            expires_at=load_time,
+            created_at=load_time,
+            active=False)
 
     @classmethod
     def temprole(cls, plugin, event, member, role_id, reason, expires_at):

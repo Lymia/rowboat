@@ -1,6 +1,7 @@
 import csv
 import gevent
 import humanize
+import urllib2
 
 from StringIO import StringIO
 from holster.emitter import Priority
@@ -214,6 +215,25 @@ class InfractionsPlugin(Plugin):
         event.msg.reply('Ok, here is an archive of all infractions', attachments=[
             ('infractions.csv', buff.getvalue())
         ])
+
+    @Plugin.command('load_archive', group='infractions', level=-1)
+    def infractions_load_archive(self, event):
+        attachment = None
+        for k in event.msg.attachments:
+            attachment = event.msg.attachments[k]
+        if not attachment:
+            raise CommandFail('no attachment given')
+          
+        req = urllib2.Request(attachment.url)
+        req.add_header('User-Agent', 'discord:RowBoat:v0.0.1 (by /u/b1naryth1ef)')
+        r = csv.reader(urllib2.urlopen(req))
+        count = 0
+        for _, user, user_tag, actor, actor_tag, type_, reason in r:
+            user = int(user)
+            actor = int(actor)
+            Infraction.load_archived(event, user, user_tag, actor, actor_tag, type_, reason)
+            count += 1
+        event.msg.reply('Loaded {} infractions.'.format(count))
 
     @Plugin.command('info', '<infraction:int>', group='infractions', level=CommandLevels.MOD)
     def infraction_info(self, event, infraction):
