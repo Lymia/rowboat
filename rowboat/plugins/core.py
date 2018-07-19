@@ -148,7 +148,7 @@ class CorePlugin(Plugin):
         super(CorePlugin, self).unload(ctx)
 
     def update_rowboat_guild_access(self):
-        if ROWBOAT_GUILD_ID not in self.state.guilds or ENV != 'prod':
+        if ROWBOAT_GUILD_ID not in self.state.guilds or (ENV != 'prod' and ENV != 'docker'):
             return
 
         rb_guild = self.state.guilds.get(ROWBOAT_GUILD_ID)
@@ -286,7 +286,7 @@ class CorePlugin(Plugin):
     @contextlib.contextmanager
     def send_control_message(self):
         embed = MessageEmbed()
-        embed.set_footer(text='Rowboat {}'.format(
+        embed.set_footer(text='RoPolice {}'.format(
             'Production' if ENV == 'prod' or ENV == 'docker' else 'Testing'
         ))
         embed.timestamp = datetime.utcnow().isoformat()
@@ -519,7 +519,7 @@ class CorePlugin(Plugin):
         # Make sure this is the owner of the server
         if not global_admin:
             if not event.guild.owner_id == event.author.id:
-                return event.msg.reply(':warning: only the server owner can setup rowboat')
+                return event.msg.reply(':warning: only the server owner can setup ropolice')
 
         # Make sure we have admin perms
         m = event.guild.members.select_one(id=self.state.me.id)
@@ -534,7 +534,7 @@ class CorePlugin(Plugin):
     @Plugin.command('about')
     def command_about(self, event):
         embed = MessageEmbed()
-        embed.set_author(name='Rowboat', icon_url=self.client.state.me.avatar_url, url='https://rowboat.party/')
+        embed.set_author(name='RoPolice', icon_url=self.client.state.me.avatar_url, url='https://www.youtube.com/watch?v=5wFDWP5JwSM')
         embed.description = BOT_INFO
         embed.add_field(name='Servers', value=str(Guild.select().count()), inline=True)
         embed.add_field(name='Uptime', value=humanize.naturaldelta(datetime.utcnow() - self.startup), inline=True)
@@ -542,7 +542,7 @@ class CorePlugin(Plugin):
 
     @Plugin.command('uptime', level=-1)
     def command_uptime(self, event):
-        event.msg.reply('Rowboat was started {}'.format(
+        event.msg.reply('RoPolice was started {}'.format(
             humanize.naturaldelta(datetime.utcnow() - self.startup)
         ))
 
@@ -558,7 +558,7 @@ class CorePlugin(Plugin):
         code = cmd.func.__code__
         lines, firstlineno = inspect.getsourcelines(code)
 
-        event.msg.reply('<https://github.com/b1naryth1ef/rowboat/blob/master/{}#L{}-{}>'.format(
+        event.msg.reply('<https://github.com/Lymia/rowboat/blob/master/{}#L{}-L{}>'.format(
             code.co_filename,
             firstlineno,
             firstlineno + len(lines)
