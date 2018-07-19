@@ -287,7 +287,7 @@ class CorePlugin(Plugin):
     def send_control_message(self):
         embed = MessageEmbed()
         embed.set_footer(text='Rowboat {}'.format(
-            'Production' if ENV == 'prod' else 'Testing'
+            'Production' if ENV == 'prod' or ENV == 'docker' else 'Testing'
         ))
         embed.timestamp = datetime.utcnow().isoformat()
         embed.color = 0x779ecb
