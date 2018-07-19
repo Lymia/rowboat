@@ -10,14 +10,14 @@ services:
     volumes:
       - ./.data:/data
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
   statsd:
     image: python:2.7.13
     volumes:
       - .:/opt/rowboat
     command: python /opt/rowboat/docker/nulld.py
     ports:
-      - "8125:8125"
+      - "127.0.0.1:8125:8125"
     stop_signal: SIGKILL
   web:
     build: .
@@ -25,7 +25,7 @@ services:
     volumes:
       - .:/opt/rowboat
     ports:
-      - "8686:8686"
+      - "127.0.0.1:8686:8686"
     depends_on:
       - db
       - redis
@@ -38,7 +38,7 @@ services:
     volumes:
       - ./frontend:/opt/frontend
     ports:
-      - "8080:8080"
+      - "127.0.0.1:24458:8080"
     depends_on:
       - web
   bot:
@@ -47,13 +47,13 @@ services:
     volumes:
       - .:/opt/rowboat
     ports:
-      - "7171:7171"
+      - "127.0.0.1:7171:7171"
     depends_on:
       - web
-  workers:
-    build: .
-    command: python manage.py workers
-    volumes:
-      - .:/opt/rowboat
-    depends_on:
-      - web
+  #workers:
+  #  build: .
+  #  command: python manage.py workers
+  #  volumes:
+  #    - .:/opt/rowboat
+  #  depends_on:
+  #    - web
