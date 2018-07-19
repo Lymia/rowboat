@@ -6,7 +6,7 @@ click==6.7
 contextlib2==0.5.4
 cssselect==1.0.1
 dill==0.2.6
--e git+https://github.com/Lymia/disco.git@829779edd908ca48eb87314435284b4611dd853e#egg=disco-py
+-e git+https://github.com/Lymia/disco.git@024caef72b00f502b1a8288978058a2e5a6a5314#egg=disco-py
 # disco-py==0.0.11-rc.8
 Distance==0.1.3
 emoji==0.3.9
