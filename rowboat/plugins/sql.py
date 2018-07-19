@@ -159,32 +159,6 @@ class SQLPlugin(Plugin):
     def on_channel_delete(self, event):
         Channel.update(deleted=True).where(Channel.channel_id == event.channel.id).execute()
 
-    @Plugin.command('sql', level=-1, global_=True)
-    def command_sql(self, event):
-        conn = database.obj.get_conn()
-
-        try:
-            tbl = MessageTable(codeblock=False)
-
-            with conn.cursor() as cur:
-                start = time.time()
-                cur.execute(event.codeblock.format(e=event))
-                dur = time.time() - start
-                tbl.set_header(*[desc[0] for desc in cur.description])
-
-                for row in cur.fetchall():
-                    tbl.add(*row)
-
-                result = tbl.compile()
-                if len(result) > 1900:
-                    return event.msg.reply(
-                        '_took {}ms_'.format(int(dur * 1000)),
-                        attachments=[('result.txt', result)])
-
-                event.msg.reply('```' + result + '```\n_took {}ms_\n'.format(int(dur * 1000)))
-        except psycopg2.Error as e:
-            event.msg.reply('```{}```'.format(e.pgerror))
-
     @Plugin.command('init', '<entity:user|channel>', level=-1, group='markov', global_=True)
     def command_markov(self, event, entity):
         if isinstance(entity, DiscoUser):
