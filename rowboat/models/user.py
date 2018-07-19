@@ -159,8 +159,8 @@ class Infraction(BaseModel):
         return base
 
     @staticmethod
-    def admin_config(event):
-        return getattr(event.base_config.plugins, 'admin', None)
+    def infractions_config(event):
+        return getattr(event.base_config.plugins, 'infractions', None)
 
     @classmethod
     def temprole(cls, plugin, event, member, role_id, reason, expires_at):
@@ -335,17 +335,17 @@ class Infraction(BaseModel):
     @classmethod
     def mute(cls, plugin, event, member, reason):
         from rowboat.plugins.modlog import Actions
-        admin_config = cls.admin_config(event)
+        infractions_config = cls.infractions_config(event)
 
         plugin.call(
             'ModLogPlugin.create_debounce',
             event,
             ['GuildMemberUpdate'],
             user_id=member.user.id,
-            role_id=admin_config.mute_role,
+            role_id=infractions_config.mute_role,
         )
 
-        member.add_role(admin_config.mute_role, reason=reason)
+        member.add_role(infractions_config.mute_role, reason=reason)
 
         plugin.call(
             'ModLogPlugin.log_action_ext',
@@ -362,14 +362,14 @@ class Infraction(BaseModel):
             actor_id=event.author.id,
             type_=cls.Types.MUTE,
             reason=reason,
-            metadata={'role': admin_config.mute_role})
+            metadata={'role': infractions_config.mute_role})
 
     @classmethod
     def tempmute(cls, plugin, event, member, reason, expires_at):
         from rowboat.plugins.modlog import Actions
-        admin_config = cls.admin_config(event)
+        infractions_config = cls.infractions_config(event)
 
-        if not admin_config.mute_role:
+        if not infractions_config.mute_role:
             plugin.log.warning('Cannot tempmute member %s, no tempmute role', member.id)
             return
 
@@ -378,10 +378,10 @@ class Infraction(BaseModel):
             event,
             ['GuildMemberUpdate'],
             user_id=member.user.id,
-            role_id=admin_config.mute_role,
+            role_id=infractions_config.mute_role,
         )
 
-        member.add_role(admin_config.mute_role, reason=reason)
+        member.add_role(infractions_config.mute_role, reason=reason)
 
         plugin.call(
             'ModLogPlugin.log_action_ext',
@@ -400,7 +400,7 @@ class Infraction(BaseModel):
             type_=cls.Types.TEMPMUTE,
             reason=reason,
             expires_at=expires_at,
-            metadata={'role': admin_config.mute_role})
+            metadata={'role': infractions_config.mute_role})
 
     @classmethod
     def clear_active(cls, event, user_id, types):
