@@ -6,7 +6,7 @@ services:
     volumes:
       - ./.data:/var/lib/postgresql/data
   redis:
-    image: ./docker/redis
+    build: ./docker/redis
     user: rowboat
     command: redis-server --appendonly yes
     volumes:
@@ -14,7 +14,7 @@ services:
     ports:
       - "127.0.0.1:6379:6379"
   statsd:
-    image: .
+    build: .
     user: rowboat
     volumes:
       - .:/opt/rowboat
