@@ -1,22 +1,21 @@
 version: '2'
-# TODO: Stop hardcoding rowboat user id.
 services:
   db:
     build: ./docker/database/
-    user: 1006
+    user: rowboat
     volumes:
       - ./.data:/var/lib/postgresql/data
   redis:
-    image: redis:3.2
-    user: 1006
+    image: ./docker/redis
+    user: rowboat
     command: redis-server --appendonly yes
     volumes:
       - ./.data:/data
     ports:
       - "127.0.0.1:6379:6379"
   statsd:
-    image: python:2.7.13
-    user: 1006
+    image: .
+    user: rowboat
     volumes:
       - .:/opt/rowboat
     command: python /opt/rowboat/docker/nulld.py
@@ -25,7 +24,7 @@ services:
     stop_signal: SIGKILL
   web:
     build: .
-    user: 1006
+    user: rowboat
     command: python manage.py serve -r
     volumes:
       - .:/opt/rowboat
@@ -37,7 +36,7 @@ services:
       - statsd
   frontend:
     build: ./frontend/
-    user: 1006
+    user: rowboat
     environment:
       - NODE_ENV=docker
     command: npm run serve
@@ -49,7 +48,7 @@ services:
       - web
   bot:
     build: .
-    user: 1006
+    user: rowboat
     command: python manage.py bot -e docker
     volumes:
       - .:/opt/rowboat
