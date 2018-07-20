@@ -542,7 +542,7 @@ class CorePlugin(Plugin):
 
     @Plugin.command('uptime', level=-1)
     def command_uptime(self, event):
-        event.msg.reply('RoPolice was started {}'.format(
+        event.msg.reply('RoPolice was started {} ago'.format(
             humanize.naturaldelta(datetime.utcnow() - self.startup)
         ))
 
