@@ -265,7 +265,7 @@ class AdminPlugin(Plugin):
             archive.url,
         ))
 
-    @Plugin.command('clean cancel', level=CommandLevels.MOD)
+    @Plugin.command('cancel', group='clean', level=CommandLevels.MOD)
     def clean_cacnel(self, event):
         if event.channel.id not in self.cleans:
             raise CommandFail('no clean is running in this channel')
@@ -273,9 +273,9 @@ class AdminPlugin(Plugin):
         self.cleans[event.channel.id].kill()
         event.msg.reply('Ok, the running clean was cancelled')
 
-    @Plugin.command('clean all', '[size:int]', level=CommandLevels.MOD, context={'mode': 'all'})
-    @Plugin.command('clean bots', '[size:int]', level=CommandLevels.MOD, context={'mode': 'bots'})
-    @Plugin.command('clean user', '<user:user> [size:int]', level=CommandLevels.MOD, context={'mode': 'user'})
+    @Plugin.command('all', '[size:int]', group='clean', level=CommandLevels.MOD, context={'mode': 'all'})
+    @Plugin.command('bots', '[size:int]', group='clean', level=CommandLevels.MOD, context={'mode': 'bots'})
+    @Plugin.command('user', '<user:user> [size:int]', group='clean', level=CommandLevels.MOD, context={'mode': 'user'})
     def clean(self, event, user=None, size=25, typ=None, mode='all'):
         """
         Removes messages
