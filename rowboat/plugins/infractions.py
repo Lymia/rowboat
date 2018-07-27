@@ -148,8 +148,6 @@ class InfractionsPlugin(Plugin):
             item.active = False
             item.save()
 
-        # Wait a few seconds to backoff from a possible bad loop, and requeue new infractions
-        gevent.sleep(5)
         self.queue_infractions()
 
     @Plugin.listen('GuildMemberUpdate', priority=Priority.BEFORE)
