@@ -6,7 +6,7 @@ import urllib2
 from StringIO import StringIO
 from holster.emitter import Priority
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from disco.bot import CommandLevels
 from disco.types.user import User as DiscoUser
@@ -71,8 +71,13 @@ class InfractionsPlugin(Plugin):
             self.log.info('[INF] no infractions to wait for')
             return
 
-        self.log.info('[INF] waiting until %s for %s', next_infraction[0].expires_at, next_infraction[0].id)
-        self.inf_task.set_next_schedule(next_infraction[0].expires_at)
+        wait_until = next_infraction[0].expires_at
+        wait_until_barrier = datetime.utcnow() + timedelta(seconds=10)
+        if wait_until < wait_until_barrier:
+            self.log.info('[INF] wait until %s is already past!', wait_until)
+            wait_until = wait_until_barrier
+        self.log.info('[INF] waiting until %s for %s', wait_until, next_infraction[0].id)
+        self.inf_task.set_next_schedule(wait_until)
 
     def clear_infractions(self):
         expired = list(Infraction.select().where(
