@@ -176,6 +176,8 @@ class SpamPlugin(Plugin):
                     'Spam Detected',
                     violation.event.guild)
 
+            self.call('InfractionsPlugin.queue_infractions')
+
             # Clean messages if requested
             if punishment != PunishmentType.NONE and violation.rule.clean:
                 msgs = Message.select(
