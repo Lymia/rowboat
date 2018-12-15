@@ -309,6 +309,7 @@ class InfractionsPlugin(Plugin):
         tbl = MessageTable()
 
         tbl.set_header('ID', 'Created', 'Type', 'User', 'Moderator', 'Active', 'Reason')
+        last_tbl_str = None
         for inf in infractions:
             type_ = {i.index: i for i in Infraction.Types.attrs}[inf.type_]
             reason = inf.reason or ''
@@ -331,8 +332,12 @@ class InfractionsPlugin(Plugin):
                 active,
                 clamp(reason, 128)
             )
+            tbl_str = tbl.compile()
+            if len(tbl_str) >= 2000:
+                break
+            last_tbl_str = tbl_str
 
-        event.msg.reply(tbl.compile())
+        event.msg.reply(last_tbl_str)
 
     @Plugin.command('recent', aliases=['latest'], group='infractions', level=CommandLevels.MOD)
     def infractions_recent(self, event):
