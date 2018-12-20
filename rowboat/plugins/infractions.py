@@ -337,7 +337,7 @@ class InfractionsPlugin(Plugin):
                 break
             last_tbl_str = tbl_str
 
-        event.msg.reply(last_tbl_str)
+        event.msg.reply(last_tbl_str or "No infractions found.")
 
     @Plugin.command('recent', aliases=['latest'], group='infractions', level=CommandLevels.MOD)
     def infractions_recent(self, event):
