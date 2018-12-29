@@ -382,6 +382,7 @@ class Infraction(BaseModel):
         )
 
         member.add_role(infractions_config.mute_role, reason=reason)
+        member.update(mute = True)
 
         plugin.call(
             'ModLogPlugin.log_action_ext',
@@ -398,7 +399,7 @@ class Infraction(BaseModel):
             actor_id=event.author.id,
             type_=cls.Types.MUTE,
             reason=reason,
-            metadata={'role': infractions_config.mute_role})
+            metadata={'role': infractions_config.mute_role, 'mute': True})
 
     @classmethod
     def tempmute(cls, plugin, event, member, reason, expires_at):
@@ -418,6 +419,7 @@ class Infraction(BaseModel):
         )
 
         member.add_role(infractions_config.mute_role, reason=reason)
+        member.update(mute = True)
 
         plugin.call(
             'ModLogPlugin.log_action_ext',
@@ -436,7 +438,7 @@ class Infraction(BaseModel):
             type_=cls.Types.TEMPMUTE,
             reason=reason,
             expires_at=expires_at,
-            metadata={'role': infractions_config.mute_role})
+            metadata={'role': infractions_config.mute_role, 'mute': True})
 
     @classmethod
     def clear_active(cls, event, user_id, types):

@@ -117,6 +117,8 @@ class InfractionsPlugin(Plugin):
             elif type_ == Infraction.Types.TEMPMUTE or Infraction.Types.TEMPROLE:
                 member = guild.get_member(item.user_id)
                 if member:
+                    if 'mute' in item.metadata:
+                        member.update(mute = False)
                     if item.metadata['role'] in member.roles:
                         self.call(
                             'ModLogPlugin.create_debounce',
@@ -140,6 +142,7 @@ class InfractionsPlugin(Plugin):
                         item.guild_id,
                         item.user_id,
                         item.metadata['role'])
+                    # TODO: Handle voice mutes.
             else:
                 self.log.warning('[INF] failed to clear infraction %s, type is invalid %s', item.id, item.type_)
                 continue
@@ -556,6 +559,7 @@ class InfractionsPlugin(Plugin):
             )
 
             member.remove_role(event.config.mute_role)
+            member.update(mute = False)
 
             self.call(
                 'ModLogPlugin.log_action_ext',
