@@ -118,7 +118,7 @@ class InfractionsPlugin(Plugin):
                 member = guild.get_member(item.user_id)
                 if member:
                     if 'mute' in item.metadata:
-                        member.mute = False
+                        member.modify(mute = False)
                     if item.metadata['role'] in member.roles:
                         self.call(
                             'ModLogPlugin.create_debounce',
@@ -559,7 +559,7 @@ class InfractionsPlugin(Plugin):
             )
 
             member.remove_role(event.config.mute_role)
-            member.mute = False
+            member.modify(mute = False)
 
             self.call(
                 'ModLogPlugin.log_action_ext',

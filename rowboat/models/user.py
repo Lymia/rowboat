@@ -382,7 +382,7 @@ class Infraction(BaseModel):
         )
 
         member.add_role(infractions_config.mute_role, reason=reason)
-        member.mute = True
+        member.modify(mute = True)
 
         plugin.call(
             'ModLogPlugin.log_action_ext',
@@ -419,7 +419,7 @@ class Infraction(BaseModel):
         )
 
         member.add_role(infractions_config.mute_role, reason=reason)
-        member.mute = True
+        member.modify(mute = True)
 
         plugin.call(
             'ModLogPlugin.log_action_ext',
