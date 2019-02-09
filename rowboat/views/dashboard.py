@@ -41,8 +41,7 @@ class ServerSentEvent(object):
 def archive(aid, fmt):
     try:
         archive = MessageArchive.select().where(
-            (MessageArchive.archive_id == aid) &
-            (MessageArchive.expires_at > datetime.utcnow())
+            MessageArchive.archive_id == aid
         ).get()
     except MessageArchive.DoesNotExist:
         return 'Invalid or Expires Archive ID', 404
