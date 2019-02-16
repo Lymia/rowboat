@@ -126,7 +126,7 @@ class CensorPlugin(Plugin):
 
         blocked_words = []
         for config in configs:
-          blocked = config.blocked_re.findall(event.context)
+          blocked = config.blocked_re.findall(event.msg.content)
           if blocked:
             blocked_words += blocked
 
