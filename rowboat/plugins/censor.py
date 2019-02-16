@@ -130,7 +130,10 @@ class CensorPlugin(Plugin):
           if blocked:
             blocked_words += blocked
 
-        return event.msg.reply(u'Banned words found: ```{}```'.format(", ".join(blocked_words)))
+        if len(blocked_words) == 0:
+          return event.msg.reply(u'No banned words found.')
+        else:
+          return event.msg.reply(u'Banned words found: ```{}```'.format(", ".join(blocked_words)))
 
     @Plugin.listen('MessageUpdate')
     def on_message_update(self, event):
