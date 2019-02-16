@@ -120,15 +120,7 @@ class CensorPlugin(Plugin):
 
     @Plugin.command('test_filter', level=CommandLevels.MOD)
     def test_filter(self, event):
-        author = author or event.author
-
-        if author.id == self.state.me.id:
-            return
-
-        if event.webhook_id:
-            return
-
-        configs = list(self.compute_relevant_configs(event, author, bypass_levels=True))
+        configs = list(self.compute_relevant_configs(event, event.author, bypass_levels=True))
         if not configs:
             return
 
