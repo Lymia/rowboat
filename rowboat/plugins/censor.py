@@ -119,8 +119,8 @@ class CensorPlugin(Plugin):
         return obj
 
     @Plugin.command('test_filter', level=CommandLevels.MOD)
-    def test_filter(self, message):
-        blocked_words = config.blocked_re.findall(message)
+    def test_filter(self, event, message):
+        blocked_words = event.config.blocked_re.findall(message)
         if blocked_words:
           return event.msg.reply(u'Banned words: {}'.format(", ".join(blocked_words)))
         else:
