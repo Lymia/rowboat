@@ -135,6 +135,11 @@ class CensorPlugin(Plugin):
         else:
           return event.msg.reply(u'Banned words found: ```{}```'.format(", ".join(blocked_words)))
 
+    @Plugin.command('raw_message', level=CommandLevels.MOD)
+    def raw_message(self, event):
+      unicode_content = ", ".join(map(lambda x: "%x" % ord(x), event.msg.content))
+      return event.msg.reply(u'Raw content: ```{}```\nUnicode content: ```{}```'.format(event.msg.content, unicode_content))
+
     @Plugin.listen('MessageUpdate')
     def on_message_update(self, event):
         try:
