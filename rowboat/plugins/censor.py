@@ -117,6 +117,14 @@ class CensorPlugin(Plugin):
         rdb.setex('inv:{}'.format(code), json.dumps(obj), 43200)
         return obj
 
+    @Plugin.command('test_filter', '<message:str...>', level=CommandLevels.MOD)
+    def test_filter(self, message):
+        blocked_words = config.blocked_re.findall(message)
+        if blocked_words:
+          return event.msg.reply(u'Banned words: {}'.format(", ".join(blocked_words)))
+        else:
+          return event.msg.reply(u'No banned words found.')
+
     @Plugin.listen('MessageUpdate')
     def on_message_update(self, event):
         try:
