@@ -88,15 +88,15 @@ class Censorship(Exception):
 
 @Plugin.with_config(CensorConfig)
 class CensorPlugin(Plugin):
-    def compute_relevant_configs(self, event, author):
+    def compute_relevant_configs(self, event, author, bypass_levels=False):
         if event.channel_id in event.config.channels:
             yield event.config.channels[event.channel.id]
 
         if event.config.levels:
-            user_level = int(self.bot.plugins.get('CorePlugin').get_level(event.guild, author))
+            user_level = int(self.bot.plugins.get('CorePlugin').get_level(event.guild, author)) if not bypass_levels else 0
 
             for level, config in event.config.levels.items():
-                if user_level <= level:
+                if user_level <= level or bypass_levels:
                     yield config
 
     def get_invite_info(self, code):
@@ -120,11 +120,25 @@ class CensorPlugin(Plugin):
 
     @Plugin.command('test_filter', level=CommandLevels.MOD)
     def test_filter(self, event):
-        blocked_words = event.config.blocked_re.findall(event.context)
-        if blocked_words:
-          return event.msg.reply(u'Banned words: {}'.format(", ".join(blocked_words)))
-        else:
-          return event.msg.reply(u'No banned words found.')
+        author = author or event.author
+
+        if author.id == self.state.me.id:
+            return
+
+        if event.webhook_id:
+            return
+
+        configs = list(self.compute_relevant_configs(event, author, bypass_levels=True))
+        if not configs:
+            return
+
+        blocked_words = []
+        for config in configs:
+          blocked = config.blocked_re.findall(event.context)
+          if blocked:
+            blocked_words += blocked
+
+        return event.msg.reply(u'Banned words found: ```{}```'.format(", ".join(blocked_words)))
 
     @Plugin.listen('MessageUpdate')
     def on_message_update(self, event):
