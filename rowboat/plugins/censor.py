@@ -118,7 +118,7 @@ class CensorPlugin(Plugin):
         rdb.setex('inv:{}'.format(code), json.dumps(obj), 43200)
         return obj
 
-    @Plugin.command('test_filter', '<message:str...>', level=CommandLevels.MOD)
+    @Plugin.command('test_filter', level=CommandLevels.MOD)
     def test_filter(self, message):
         blocked_words = config.blocked_re.findall(message)
         if blocked_words:
