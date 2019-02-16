@@ -3,6 +3,7 @@ import json
 import urlparse
 
 from holster.enum import Enum
+from disco.bot import CommandLevels
 from disco.types.base import cached_property
 from disco.util.sanitize import S
 from disco.api.http import APIException
