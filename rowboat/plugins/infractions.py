@@ -48,6 +48,9 @@ class InfractionsConfig(PluginConfig):
 
     # The mute role
     mute_role = Field(snowflake, default=None)
+    
+    # The mute channel
+    mute_channel = Field(snowflake, default=None)
 
     # Level required to edit reasons
     reason_edit_level = Field(int, default=int(CommandLevels.ADMIN))
@@ -117,8 +120,6 @@ class InfractionsPlugin(Plugin):
             elif type_ == Infraction.Types.TEMPMUTE or Infraction.Types.TEMPROLE:
                 member = guild.get_member(item.user_id)
                 if member:
-                    if 'mute' in item.metadata:
-                        member.modify(mute = False)
                     if item.metadata['role'] in member.roles:
                         self.call(
                             'ModLogPlugin.create_debounce',
@@ -559,7 +560,6 @@ class InfractionsPlugin(Plugin):
             )
 
             member.remove_role(event.config.mute_role)
-            member.modify(mute = False)
 
             self.call(
                 'ModLogPlugin.log_action_ext',
