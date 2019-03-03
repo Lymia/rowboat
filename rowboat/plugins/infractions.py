@@ -349,6 +349,7 @@ class InfractionsPlugin(Plugin):
         pass
 
     @Plugin.command('duration', '<infraction:int> <duration:str>', group='infractions', level=CommandLevels.MOD)
+    @Plugin.command('duration', '<infraction:int> <duration:str>', level=CommandLevels.MOD)
     def infraction_duration(self, event, infraction, duration):
         try:
             inf = Infraction.get(id=infraction)
