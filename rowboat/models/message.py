@@ -17,7 +17,7 @@ from rowboat.util import default_json
 from rowboat.models.user import User
 from rowboat.sql import BaseModel
 
-EMOJI_RE = re.compile(r'<:.+:([0-9]+)>')
+EMOJI_RE = re.compile(r'<:.+?:([0-9]+)>')
 
 
 @BaseModel.register
