@@ -70,7 +70,7 @@ def guild_delete(guild):
 @with_guild
 def guild_config(guild):
     return jsonify({
-        'contents': guild.config_raw,
+        'contents': bytes(guild.config_raw).decode("utf-8"),
     })
 
 
