@@ -40,6 +40,9 @@ class CensorSubConfig(SlottedModel):
 
     blocked_words = ListField(lower, default=[])
     blocked_tokens = ListField(lower, default=[])
+    
+    included_channels = ListField(ChannelField, defualt=[])
+    excluded_channels = ListField(ChannelField, default=[])
 
     @cached_property
     def blocked_re(self):
@@ -96,6 +99,13 @@ class CensorPlugin(Plugin):
             user_level = int(self.bot.plugins.get('CorePlugin').get_level(event.guild, author)) if not bypass_levels else 0
 
             for level, config in event.config.levels.items():
+                if "channel" in event.__dict__:
+                    if len(config.included_channels) != 0:
+                        if not event.channel.id in config.included_channels:
+                                continue
+                    elif len(config.excluded_channels) != 0:
+                        if event.channel.id in config.excluded_channels:
+                                continue
                 if user_level <= level or bypass_levels:
                     yield config
 
@@ -137,8 +147,8 @@ class CensorPlugin(Plugin):
 
     @Plugin.command('raw_message', level=CommandLevels.MOD)
     def raw_message(self, event):
-      unicode_content = ", ".join(map(lambda x: "%x" % ord(x), event.msg.content))
-      return event.msg.reply(u'Raw content: ```{}```\nUnicode content: ```{}```'.format(event.msg.content, unicode_content))
+          unicode_content = ", ".join(map(lambda x: "%x" % ord(x), event.msg.content))
+          return event.msg.reply(u'Raw content: ```{}```\nUnicode content: ```{}```'.format(event.msg.content, unicode_content))
 
     @Plugin.listen('MessageUpdate')
     def on_message_update(self, event):
