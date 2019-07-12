@@ -92,21 +92,27 @@ class Censorship(Exception):
 @Plugin.with_config(CensorConfig)
 class CensorPlugin(Plugin):
     def compute_relevant_configs(self, event, author, bypass_levels=False):
-        if "channel" in event.__dict__ and event.channel.id in event.config.channels:
-            yield event.config.channels[event.channel.id]
+        channel = event.message.channel if "message" in event.__dict__ else (event.msg.channel if "msg" in event.__dict__ else None)
+
+        if channel and channel.id in event.config.channels:
+            yield event.config.channels[channel.id]
 
         if event.config.levels:
             user_level = int(self.bot.plugins.get('CorePlugin').get_level(event.guild, author)) if not bypass_levels else 0
 
             for level, config in event.config.levels.items():
-                if "channel" in event.__dict__:
+                if channel:
+                    #print(channel, channel.id, config.included_channels, config.excluded_channels, channel.id in config.included_channels, channel.id in config.excluded_channels)
                     if len(config.included_channels) != 0:
-                        if not event.channel.id in config.included_channels:
+                        if not channel.id in config.included_channels:
+                                #print("continue")
                                 continue
                     elif len(config.excluded_channels) != 0:
-                        if event.channel.id in config.excluded_channels:
+                        if channel.id in config.excluded_channels:
+                                #print("continue")
                                 continue
                 if user_level <= level or bypass_levels:
+                    #print("added")
                     yield config
 
     def get_invite_info(self, code):
@@ -132,7 +138,7 @@ class CensorPlugin(Plugin):
     def test_filter(self, event):
         configs = list(self.compute_relevant_configs(event, event.author, bypass_levels=True))
         if not configs:
-            return
+            return event.msg.reply(u'No applicable configs.')
 
         blocked_words = []
         for config in configs:
