@@ -41,8 +41,8 @@ class CensorSubConfig(SlottedModel):
     blocked_words = ListField(lower, default=[])
     blocked_tokens = ListField(lower, default=[])
     
-    included_channels = ListField(ChannelField, defualt=[])
-    excluded_channels = ListField(ChannelField, default=[])
+    included_channels = ListField(snowflake, defualt=[])
+    excluded_channels = ListField(snowflake, default=[])
 
     @cached_property
     def blocked_re(self):
@@ -54,7 +54,7 @@ class CensorSubConfig(SlottedModel):
 
 class CensorConfig(PluginConfig):
     levels = DictField(int, CensorSubConfig)
-    channels = DictField(ChannelField, CensorSubConfig)
+    channels = DictField(snowflake, CensorSubConfig)
 
 
 # It's bad kids!
