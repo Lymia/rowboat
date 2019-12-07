@@ -400,8 +400,8 @@ class CorePlugin(Plugin):
         commands.
         """
         # Ignore messages sent by bots
-        if event.message.author.bot:
-            return
+        #if event.message.author.bot:
+        #    return
 
         # If this is message for a guild, grab the guild object
         if hasattr(event, 'guild') and event.guild:
