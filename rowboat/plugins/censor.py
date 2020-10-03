@@ -51,7 +51,7 @@ class CensorSubConfig(SlottedModel):
             map(re.escape, self.blocked_tokens) +
             map(lambda k: u'\\b{}\\b'.format(re.escape(k)), self.blocked_words) +
             self.blocked_regex
-        )), re.I | re.M)
+        )), re.I | re.M | re.S)
 
 
 class CensorConfig(PluginConfig):
