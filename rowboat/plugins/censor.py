@@ -40,6 +40,7 @@ class CensorSubConfig(SlottedModel):
 
     blocked_words = ListField(lower, default=[])
     blocked_tokens = ListField(lower, default=[])
+    blocked_regex = ListField(lower, default=[])
     
     included_channels = ListField(snowflake, defualt=[])
     excluded_channels = ListField(snowflake, default=[])
@@ -48,7 +49,8 @@ class CensorSubConfig(SlottedModel):
     def blocked_re(self):
         return re.compile(u'({})'.format(u'|'.join(
             map(re.escape, self.blocked_tokens) +
-            map(lambda k: u'\\b{}\\b'.format(re.escape(k)), self.blocked_words)
+            map(lambda k: u'\\b{}\\b'.format(re.escape(k)), self.blocked_words) +
+            self.blocked_regex
         )), re.I)
 
 
