@@ -18,14 +18,13 @@ class Websocket(LoggingClass, websocket.WebSocketApp):
     """
     def __init__(self, *args, **kwargs):
         LoggingClass.__init__(self)
-        kwargs["on_close"] = self._callback_on_close
         websocket.WebSocketApp.__init__(self, *args, **kwargs)
 
         self.emitter = Emitter()
 
         # Hack to get events to emit
         for var in six.iterkeys(self.__dict__):
-            if not var.startswith('on_') and var != "on_close":
+            if not var.startswith('on_'):
                 continue
 
             setattr(self, var, var)
@@ -39,7 +38,7 @@ class Websocket(LoggingClass, websocket.WebSocketApp):
             return [code, reason]
         return [None, None]
 
-    def _callback_on_close(self, a, b, c):
+    def on_close(self, a, b, c):
         self._callback("on_close", a, b, c)
     def _callback(self, callback, *args):
         if not callback:
