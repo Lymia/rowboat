@@ -67,6 +67,6 @@ datadog==0.16.0
 # From disco
 gevent==1.4.0
 holster==2.0.0
-requests==2.20.1
+#requests==2.20.1
 six==1.11.0
-websocket-client==0.44.0
+#websocket-client==0.44.0

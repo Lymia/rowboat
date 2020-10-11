@@ -18,6 +18,7 @@ services:
     user: rowboat
     command: python manage.py serve -r
     volumes:
+      - .rowboat_home:/home/rowboat
       - .:/opt/rowboat
     ports:
       - "127.0.0.1:8686:8686"
