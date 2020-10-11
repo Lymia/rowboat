@@ -47,8 +47,8 @@ redis==2.10.5
 regex==2017.2.8
 requests-oauthlib==0.8.0
 rsa==3.4.2
-#ruamel.ordereddict==0.4.15
-#ruamel.yaml==0.16.12
+#ruamel.ordereddict==0.4.9
+#ruamel.yaml==0.13.14
 tinycss==0.4
 typing==3.5.3.0
 tzlocal==1.3
