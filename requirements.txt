@@ -6,8 +6,6 @@ click==6.7
 contextlib2==0.5.4
 cssselect==1.0.1
 dill==0.2.6
--e git+https://github.com/Lymia/disco.git@2fbb4f9ef310a328a6a9ff270ac03b1d856a853f#egg=disco-py
-# disco-py==0.0.11-rc.8
 Distance==0.1.3
 emoji==0.3.9
 enum34==1.1.6
@@ -63,6 +61,12 @@ fuzzywuzzy==0.15.0
 pytest==3.0.7
 python-Levenshtein==0.12.0
 -e git+https://github.com/b1naryth1ef/peewee.git@1b7d9f34d5f93464aa647cea4faab68cc45c1496#egg=peewee
-#gevent==1.1.2
 gevent_inotifyx==0.1.1
 datadog==0.16.0
+
+# From disco
+gevent==1.4.0
+holster==2.0.0
+requests==2.20.1
+six==1.11.0
+websocket-client==0.44.0
