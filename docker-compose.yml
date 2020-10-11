@@ -13,15 +13,6 @@ services:
       - ./.data:/data
     ports:
       - "127.0.0.1:6379:6379"
-  statsd:
-    build: .
-    user: rowboat
-    volumes:
-      - .:/opt/rowboat
-    command: python /opt/rowboat/docker/nulld.py
-    ports:
-      - "127.0.0.1:8125:8125"
-    stop_signal: SIGKILL
   web:
     build: .
     user: rowboat
@@ -33,7 +24,6 @@ services:
     depends_on:
       - db
       - redis
-      - statsd
   frontend:
     build: ./frontend/
     user: rowboat
@@ -47,25 +37,13 @@ services:
     depends_on:
       - web
   bot:
-    build:
-      context: .
-      shm_size: '512m'
+    build: .
     user: rowboat
     command: python manage.py bot -e docker
     volumes:
+      - .rowboat_home:/home/rowboat
       - .:/opt/rowboat
-      - type: tmpfs
-        target: /tmp
-        tmpfs:
-          size: 134217728
     ports:
       - "127.0.0.1:7171:7171"
     depends_on:
       - web
-  #workers:
-  #  build: .
-  #  command: python manage.py workers
-  #  volumes:
-  #    - .:/opt/rowboat
-  #  depends_on:
-  #    - web
