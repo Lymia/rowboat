@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 from gevent import monkey; monkey.patch_all()
 
 from werkzeug.serving import run_with_reloader
@@ -35,7 +35,7 @@ class BotSupervisor(object):
     def start(self):
         env = copy.deepcopy(os.environ)
         env.update(self.env)
-        self.proc = subprocess.Popen(['python', '-m', 'disco.cli', '--config', 'config.yaml'], env=env)
+        self.proc = subprocess.Popen(['pypy', '-m', 'disco.cli', '--config', 'config.yaml'], env=env)
 
     def stop(self):
         self.proc.terminate()
