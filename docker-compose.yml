@@ -54,6 +54,10 @@ services:
     command: python manage.py bot -e docker
     volumes:
       - .:/opt/rowboat
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 134217728
     ports:
       - "127.0.0.1:7171:7171"
     depends_on:
