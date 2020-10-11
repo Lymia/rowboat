@@ -20,7 +20,6 @@ from rowboat.plugins import RowboatPlugin as Plugin, CommandFail
 from rowboat.util.timing import Eventual
 from rowboat.util.input import parse_duration
 from rowboat.util.gevent import wait_many
-from rowboat.util.stats import statsd, to_tags
 from rowboat.types.plugin import PluginConfig
 from rowboat.models.guild import GuildVoiceSession
 from rowboat.models.user import User, Infraction
@@ -314,7 +313,6 @@ class UtilitiesPlugin(Plugin):
         tags = to_tags(guild_id=event.msg.guild.id)
 
         if infractions.value:
-            statsd.timing('sql.duration.infractions', infractions.value._query_time, tags=tags)
             infractions = list(infractions.value)
             total = sum(i[1] for i in infractions)
             content.append(u'\n**\u276F Infractions**')
