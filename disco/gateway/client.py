@@ -108,7 +108,8 @@ class GatewayClient(LoggingClass):
     def handle_dispatch(self, packet):
         obj = GatewayEvent.from_dispatch(self.client, packet)
         if obj != None:
-            self.log.debug('GatewayClient.handle_dispatch %s', obj.__class__.__name__)
+            if obj.__class__.__name__ != "PresenceUpdate":
+	            self.log.debug('GatewayClient.handle_dispatch %s', obj.__class__.__name__)
             self.client.events.emit(obj.__class__.__name__, obj)
             if self.replaying:
                 self.replayed_events += 1

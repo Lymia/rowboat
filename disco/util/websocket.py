@@ -30,6 +30,7 @@ class Websocket(LoggingClass, websocket.WebSocketApp):
             setattr(self, var, var)
 
     def _get_close_args(self, data):
+        self.log.info("WS closed: "+repr(data))
         if data and len(data) >= 2:
             code = 256 * six.byte2int(data[0:1]) + six.byte2int(data[1:2])
             reason = data[2:].decode('utf-8')

@@ -6,6 +6,7 @@ import logging
 
 LEVEL_OVERRIDES = {
     'requests': logging.WARNING,
+    'peewee': logging.INFO,
 }
 
 LOG_FORMAT = '[%(levelname)s] %(asctime)s - %(name)s:%(lineno)d - %(message)s'
