@@ -47,11 +47,17 @@ services:
     depends_on:
       - web
   bot:
-    build: .
+    build:
+      context: .
+      shm_size: '512m'
     user: rowboat
     command: python manage.py bot -e docker
     volumes:
       - .:/opt/rowboat
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 134217728
     ports:
       - "127.0.0.1:7171:7171"
     depends_on:
