@@ -28,8 +28,6 @@ class Websocket(LoggingClass, websocket.WebSocketApp):
                 continue
 
             setattr(self, var, var)
-            
-        self.on_close = self._callback_on_close
 
     def _get_close_args(self, data):
         if data and len(data) >= 2:
