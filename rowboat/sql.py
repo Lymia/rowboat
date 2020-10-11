@@ -11,14 +11,12 @@ REGISTERED_MODELS = []
 database = Proxy()
 
 
-OP['IRGX'] = 'irgx'
+#OP['IRGX'] = 'irgx'
 
+#def pg_regex_i(lhs, rhs):
+#    return Expression(lhs, OP.IRGX, rhs)
 
-def pg_regex_i(lhs, rhs):
-    return Expression(lhs, OP.IRGX, rhs)
-
-
-PostgresqlExtDatabase.register_ops({OP.IRGX: '~*'})
+#PostgresqlExtDatabase.register_ops({OP.IRGX: '~*'})
 
 
 class BaseModel(Model):

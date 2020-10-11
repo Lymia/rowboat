@@ -14,7 +14,7 @@ Flask==0.12
 future==0.16.0
 futures==3.0.5
 #greenlet==0.4.14
-holster==1.0.11
+holster==1.1.0
 httplib2==0.10.3
 humanize==0.5.1
 inflection==0.3.1
@@ -60,13 +60,14 @@ xxhash==1.0.1
 fuzzywuzzy==0.15.0
 pytest==3.0.7
 python-Levenshtein==0.12.0
--e git+https://github.com/b1naryth1ef/peewee.git@1b7d9f34d5f93464aa647cea4faab68cc45c1496#egg=peewee
+#-e git+https://github.com/b1naryth1ef/peewee.git@1b7d9f34d5f93464aa647cea4faab68cc45c1496#egg=peewee
+peewee==3.13.3
 gevent_inotifyx==0.1.1
 datadog==0.16.0
 
 # From disco
-gevent==20.9.0
+gevent==1.5.0
 #holster==2.0.0
 requests==2.20.1
-six==1.11.0
+six==1.15.0
 #websocket-client==0.44.0
