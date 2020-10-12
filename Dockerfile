@@ -1,4 +1,4 @@
-FROM pypy:2
+FROM python:2
 
 RUN useradd -u 1006 -ms /bin/bash rowboat
 #RUN mkdir /home/rowboat

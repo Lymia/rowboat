@@ -232,6 +232,7 @@ class GatewayClient(LoggingClass):
                     int(self.client.config.shard_id),
                     int(self.client.config.shard_count),
                 ],
+                'intents': 14031,
                 'properties': {
                     '$os': 'linux',
                     '$browser': 'disco',
