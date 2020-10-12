@@ -16,7 +16,7 @@ services:
   web:
     build: .
     user: rowboat
-    command: pypy manage.py serve -r
+    command: python manage.py serve -r
     volumes:
       - .rowboat_home:/home/rowboat
       - .:/opt/rowboat
@@ -40,7 +40,7 @@ services:
   bot:
     build: .
     user: rowboat
-    command: pypy manage.py bot -e docker
+    command: python manage.py bot -e docker
     volumes:
       - .rowboat_home:/home/rowboat
       - .:/opt/rowboat
