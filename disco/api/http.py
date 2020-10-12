@@ -54,15 +54,13 @@ class Routes(object):
     CHANNELS_MESSAGES_REACTIONS_DELETE_ME = (HTTPMethod.DELETE, CHANNELS + '/messages/{message}/reactions/{emoji}/@me')
     CHANNELS_MESSAGES_REACTIONS_DELETE_USER = (HTTPMethod.DELETE,
                                                CHANNELS + '/messages/{message}/reactions/{emoji}/{user}')
-    CHANNELS_MESSAGES_REACTIONS_DELETE_EMOJI = (HTTPMethod.DELETE,
-                                                CHANNELS + '/messages/{message}/reactions/{emoji}')
     CHANNELS_PERMISSIONS_MODIFY = (HTTPMethod.PUT, CHANNELS + '/permissions/{permission}')
     CHANNELS_PERMISSIONS_DELETE = (HTTPMethod.DELETE, CHANNELS + '/permissions/{permission}')
     CHANNELS_INVITES_LIST = (HTTPMethod.GET, CHANNELS + '/invites')
     CHANNELS_INVITES_CREATE = (HTTPMethod.POST, CHANNELS + '/invites')
     CHANNELS_PINS_LIST = (HTTPMethod.GET, CHANNELS + '/pins')
-    CHANNELS_PINS_CREATE = (HTTPMethod.PUT, CHANNELS + '/pins/{message}')
-    CHANNELS_PINS_DELETE = (HTTPMethod.DELETE, CHANNELS + '/pins/{message}')
+    CHANNELS_PINS_CREATE = (HTTPMethod.PUT, CHANNELS + '/pins/{pin}')
+    CHANNELS_PINS_DELETE = (HTTPMethod.DELETE, CHANNELS + '/pins/{pin}')
     CHANNELS_WEBHOOKS_CREATE = (HTTPMethod.POST, CHANNELS + '/webhooks')
     CHANNELS_WEBHOOKS_LIST = (HTTPMethod.GET, CHANNELS + '/webhooks')
 
@@ -161,7 +159,7 @@ class APIException(Exception):
         self.errors = {}
 
         if self.retries:
-            self.msg += ' after {} retries'.format(self.retries)
+            self.msg += " after {} retries".format(self.retries)
 
         # Try to decode JSON, and extract params
         try:
@@ -189,7 +187,7 @@ class HTTPClient(LoggingClass):
     A simple HTTP client which wraps the requests library, adding support for
     Discords rate-limit headers, authorization, and request/response validation.
     """
-    BASE_URL = 'https://discord.com/api/v7'
+    BASE_URL = 'https://discordapp.com/api/v7'
     MAX_RETRIES = 5
 
     def __init__(self, token, after_request=None):
@@ -300,7 +298,7 @@ class HTTPClient(LoggingClass):
 
             backoff = self.random_backoff()
             self.log.warning('Request to `{}` failed with code {}, retrying after {}s ({})'.format(
-                url, r.status_code, backoff, r.content,
+                url, r.status_code, backoff, r.content
             ))
             gevent.sleep(backoff)
 

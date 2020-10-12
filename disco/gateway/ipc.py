@@ -68,7 +68,7 @@ class GIPCProxy(LoggingClass):
 
             try:
                 self.handle(mtype, data)
-            except Exception:
+            except:
                 self.log.exception('Error in GIPCProxy:')
 
     def execute(self, func):

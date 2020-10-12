@@ -6,7 +6,6 @@ from contextlib import contextmanager
 from gevent.local import local
 from six.moves.urllib.parse import quote
 
-from holster.enum import EnumAttr
 from disco.api.http import Routes, HTTPClient, to_bytes
 from disco.util.logging import LoggingClass
 from disco.util.sanitize import S
@@ -34,7 +33,7 @@ def _reason_header(value):
 
 class Responses(list):
     def rate_limited_duration(self):
-        return sum(i.rate_limited_duration for i in self)
+        return sum([i.rate_limited_duration for i in self])
 
     @property
     def rate_limited(self):
@@ -128,7 +127,7 @@ class APIClient(LoggingClass):
             around=around,
             before=before,
             after=after,
-            limit=limit,
+            limit=limit
         ))
 
         return Message.create_map(self.client, r.json())
@@ -137,16 +136,8 @@ class APIClient(LoggingClass):
         r = self.http(Routes.CHANNELS_MESSAGES_GET, dict(channel=channel, message=message))
         return Message.create(self.client, r.json())
 
-    def channels_messages_create(
-            self,
-            channel,
-            content=None,
-            nonce=None,
-            tts=False,
-            attachment=None,
-            attachments=[],
-            embed=None,
-            sanitize=False):
+    def channels_messages_create(self, channel, content=None, nonce=None, tts=False,
+            attachment=None, attachments=[], embed=None, sanitize=False):
 
         payload = {
             'nonce': nonce,
@@ -181,7 +172,7 @@ class APIClient(LoggingClass):
                 Routes.CHANNELS_MESSAGES_CREATE,
                 dict(channel=channel),
                 data={'payload_json': json.dumps(payload)},
-                files=files,
+                files=files
             )
         else:
             r = self.http(Routes.CHANNELS_MESSAGES_CREATE, dict(channel=channel), json=payload)
@@ -191,7 +182,7 @@ class APIClient(LoggingClass):
     def channels_messages_modify(self, channel, message, content=None, embed=None, sanitize=False):
         payload = {}
 
-        if content is not None:
+        if content:
             if sanitize:
                 content = S(content)
             payload['content'] = content
@@ -230,9 +221,6 @@ class APIClient(LoggingClass):
 
         self.http(route, obj)
 
-    def channels_messages_reactions_delete_emoji(self, channel, message, emoji):
-        self.http(Routes.CHANNELS_MESSAGES_REACTIONS_DELETE_EMOJI, dict(channel=channel, message=message, emoji=emoji))
-
     def channels_permissions_modify(self, channel, permission, allow, deny, typ, reason=None):
         self.http(Routes.CHANNELS_PERMISSIONS_MODIFY, dict(channel=channel, permission=permission), json={
             'allow': allow,
@@ -243,7 +231,7 @@ class APIClient(LoggingClass):
     def channels_permissions_delete(self, channel, permission, reason=None):
         self.http(
             Routes.CHANNELS_PERMISSIONS_DELETE,
-            dict(channel=channel, permission=permission), headers=_reason_header(reason),
+            dict(channel=channel, permission=permission), headers=_reason_header(reason)
         )
 
     def channels_invites_list(self, channel):
@@ -255,7 +243,7 @@ class APIClient(LoggingClass):
             'max_age': max_age,
             'max_uses': max_uses,
             'temporary': temporary,
-            'unique': unique,
+            'unique': unique
         }, headers=_reason_header(reason))
         return Invite.create(self.client, r.json())
 
@@ -296,32 +284,34 @@ class APIClient(LoggingClass):
         r = self.http(Routes.GUILDS_CHANNELS_LIST, dict(guild=guild))
         return Channel.create_hash(self.client, 'id', r.json(), guild_id=guild)
 
-    def guilds_channels_create(
-            self,
+    def guilds_channels_create(self,
             guild,
-            channel_type,
             name,
+            channel_type,
             bitrate=None,
             user_limit=None,
             permission_overwrites=[],
-            nsfw=None,
             parent_id=None,
-            position=None,
             reason=None):
 
         payload = {
             'name': name,
-            'type': channel_type.value if isinstance(channel_type, EnumAttr) else channel_type,
+            'channel_type': channel_type,
             'permission_overwrites': [i.to_dict() for i in permission_overwrites],
             'parent_id': parent_id,
         }
 
-        payload.update(optional(
-            nsfw=nsfw,
-            bitrate=bitrate,
-            user_limit=user_limit,
-            position=position,
-        ))
+        if channel_type == 'text':
+            pass
+        elif channel_type == 'voice':
+            if bitrate is not None:
+                payload['bitrate'] = bitrate
+
+            if user_limit is not None:
+                payload['user_limit'] = user_limit
+        else:
+            # TODO: better error here?
+            raise Exception('Invalid channel type: {}'.format(channel_type))
 
         r = self.http(
             Routes.GUILDS_CHANNELS_CREATE,
@@ -351,7 +341,7 @@ class APIClient(LoggingClass):
         self.http(
             Routes.GUILDS_MEMBERS_MODIFY,
             dict(guild=guild, member=member),
-            json=kwargs,
+            json=optional(**kwargs),
             headers=_reason_header(reason))
 
     def guilds_members_roles_add(self, guild, member, role, reason=None):
@@ -379,7 +369,6 @@ class APIClient(LoggingClass):
     def guilds_bans_create(self, guild, user, delete_message_days=0, reason=None):
         self.http(Routes.GUILDS_BANS_CREATE, dict(guild=guild, user=user), params={
             'delete-message-days': delete_message_days,
-            'reason': reason,
         }, headers=_reason_header(reason))
 
     def guilds_bans_delete(self, guild, user, reason=None):
@@ -392,37 +381,15 @@ class APIClient(LoggingClass):
         r = self.http(Routes.GUILDS_ROLES_LIST, dict(guild=guild))
         return Role.create_map(self.client, r.json(), guild_id=guild)
 
-    def guilds_roles_create(
-            self,
-            guild,
-            name=None,
-            permissions=None,
-            color=None,
-            hoist=None,
-            mentionable=None,
-            reason=None):
-
-        r = self.http(
-            Routes.GUILDS_ROLES_CREATE,
-            dict(guild=guild),
-            json=optional(
-                name=name,
-                permissions=permissions,
-                color=color,
-                hoist=hoist,
-                mentionable=mentionable,
-            ),
-            headers=_reason_header(reason))
+    def guilds_roles_create(self, guild, reason=None):
+        r = self.http(Routes.GUILDS_ROLES_CREATE, dict(guild=guild), headers=_reason_header(reason))
         return Role.create(self.client, r.json(), guild_id=guild)
 
     def guilds_roles_modify_batch(self, guild, roles, reason=None):
         r = self.http(Routes.GUILDS_ROLES_MODIFY_BATCH, dict(guild=guild), json=roles, headers=_reason_header(reason))
         return Role.create_map(self.client, r.json(), guild_id=guild)
 
-    def guilds_roles_modify(
-            self,
-            guild,
-            role,
+    def guilds_roles_modify(self, guild, role,
             name=None,
             hoist=None,
             color=None,
@@ -495,10 +462,6 @@ class APIClient(LoggingClass):
         users = User.create_hash(self.client, 'id', data['users'])
         webhooks = Webhook.create_hash(self.client, 'id', data['webhooks'])
         return AuditLogEntry.create_map(self.client, r.json()['audit_log_entries'], users, webhooks, guild_id=guild)
-
-    def users_get(self, user):
-        r = self.http(Routes.USERS_GET, dict(user=user))
-        return User.create(self.client, r.json())
 
     def users_me_get(self):
         return User.create(self.client, self.http(Routes.USERS_ME_GET).json())

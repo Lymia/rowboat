@@ -6,20 +6,20 @@ from holster.emitter import Emitter
 
 from disco.voice.client import VoiceState
 from disco.voice.queue import PlayableQueue
-from disco.util.logging import LoggingClass
+
+MAX_TIMESTAMP = 4294967295
 
 
-class Player(LoggingClass):
+class Player(object):
     Events = Enum(
         'START_PLAY',
         'STOP_PLAY',
         'PAUSE_PLAY',
         'RESUME_PLAY',
-        'DISCONNECT',
+        'DISCONNECT'
     )
 
     def __init__(self, client, queue=None):
-        super(Player, self).__init__()
         self.client = client
 
         # Queue contains playable items
@@ -44,7 +44,7 @@ class Player(LoggingClass):
         self.complete = gevent.event.Event()
 
         # Event emitter for metadata
-        self.events = Emitter()
+        self.events = Emitter(gevent.spawn)
 
     def disconnect(self):
         self.client.disconnect()
@@ -60,10 +60,9 @@ class Player(LoggingClass):
         self.events.emit(self.Events.PAUSE_PLAY)
 
     def resume(self):
-        if self.paused:
-            self.paused.set()
-            self.paused = None
-            self.events.emit(self.Events.RESUME_PLAY)
+        self.paused.set()
+        self.paused = None
+        self.events.emit(self.Events.RESUME_PLAY)
 
     def play(self, item):
         # Grab the first frame before we start anything else, sometimes playables
@@ -92,11 +91,12 @@ class Player(LoggingClass):
                 return
 
             if self.client.state != VoiceState.CONNECTED:
-                self.client.state_emitter.once(VoiceState.CONNECTED, timeout=30)
+                self.client.state_emitter.wait(VoiceState.CONNECTED)
 
-            # Send the voice frame and increment our timestamp
             self.client.send_frame(frame)
-            self.client.increment_timestamp(item.samples_per_frame)
+            self.client.timestamp += item.samples_per_frame
+            if self.client.timestamp > MAX_TIMESTAMP:
+                self.client.timestamp = 0
 
             frame = item.next_frame()
             if frame is None:

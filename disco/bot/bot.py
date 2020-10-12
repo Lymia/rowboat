@@ -7,10 +7,10 @@ import importlib
 
 from six.moves import reload_module
 from holster.threadlocal import ThreadLocal
-from gevent.pywsgi import WSGIServer
+from gevent.wsgi import WSGIServer
 
 from disco.types.guild import GuildMember
-from disco.bot.plugin import find_loadable_plugins
+from disco.bot.plugin import Plugin
 from disco.bot.command import CommandEvent, CommandLevels
 from disco.bot.storage import Storage
 from disco.util.config import Config
@@ -76,7 +76,6 @@ class BotConfig(Config):
     levels = {}
     plugins = []
     plugin_config = {}
-    shared_config = {}
 
     commands_enabled = True
     commands_require_mention = True
@@ -146,18 +145,12 @@ class Bot(LoggingClass):
         if self.client.config.manhole_enable:
             self.client.manhole_locals['bot'] = self
 
-        # Setup HTTP server (Flask app) if enabled
-        self.http = None
         if self.config.http_enabled:
-            try:
-                from flask import Flask
-            except ImportError:
-                self.log.warning('Failed to enable HTTP server, Flask is not installed')
-            else:
-                self.log.info('Starting HTTP server bound to %s:%s', self.config.http_host, self.config.http_port)
-                self.http = Flask('disco')
-                self.http_server = WSGIServer((self.config.http_host, self.config.http_port), self.http)
-                self.http_server_greenlet = gevent.spawn(self.http_server.serve_forever)
+            from flask import Flask
+            self.log.info('Starting HTTP server bound to %s:%s', self.config.http_host, self.config.http_port)
+            self.http = Flask('disco')
+            self.http_server = WSGIServer((self.config.http_host, self.config.http_port), self.http)
+            self.http_server_greenlet = gevent.spawn(self.http_server.serve_forever)
 
         self.plugins = {}
         self.group_abbrev = {}
@@ -186,8 +179,8 @@ class Bot(LoggingClass):
             self.add_plugin_module(plugin_mod)
 
         # Convert level mapping
-        for k, v in list(six.iteritems(self.config.levels)):
-            self.config.levels[int(k) if k.isdigit() else k] = CommandLevels.get(v)
+        for k, v in six.iteritems(self.config.levels):
+            self.config.levels[k] = CommandLevels.get(v)
 
     @classmethod
     def from_cli(cls, *plugins):
@@ -224,7 +217,7 @@ class Bot(LoggingClass):
         Called when a plugin is loaded/unloaded to recompute internal state.
         """
         if self.config.commands_group_abbrev:
-            groups = {command.group for command in self.commands if command.group}
+            groups = set(command.group for command in self.commands if command.group)
             self.group_abbrev = self.compute_group_abbrev(groups)
 
         self.compute_command_matches_re()
@@ -300,7 +293,7 @@ class Bot(LoggingClass):
                 mention_rules.get('user', True) and mention_direct,
                 mention_rules.get('everyone', False) and mention_everyone,
                 mention_rules.get('role', False) and any(mention_roles),
-                msg.channel.is_dm,
+                msg.channel.is_dm
             )):
                 return []
 
@@ -308,9 +301,10 @@ class Bot(LoggingClass):
                 if msg.guild:
                     member = msg.guild.get_member(self.client.state.me)
                     if member:
-                        # Filter both the normal and nick mentions
+                        # If nickname is set, filter both the normal and nick mentions
+                        if member.nick:
+                            content = content.replace(member.mention, '', 1)
                         content = content.replace(member.user.mention, '', 1)
-                        content = content.replace(member.user.mention_nickname, '', 1)
                 else:
                     content = content.replace(self.client.state.me.mention, '', 1)
             elif mention_everyone:
@@ -381,7 +375,7 @@ class Bot(LoggingClass):
             self.config.commands_require_mention,
             self.config.commands_mention_rules,
             self.config.commands_prefix,
-            msg,
+            msg
         ))
 
         if not len(commands):
@@ -405,24 +399,17 @@ class Bot(LoggingClass):
             self.last_message_cache[event.message.channel_id] = (event.message, result)
 
     def on_message_update(self, event):
-        if not self.config.commands_allow_edit:
-            return
+        if self.config.commands_allow_edit:
+            obj = self.last_message_cache.get(event.message.channel_id)
+            if not obj:
+                return
 
-        # Ignore messages that do not have content, these can happen when only
-        #  some message fields are updated.
-        if not event.message.content:
-            return
+            msg, triggered = obj
+            if msg.id == event.message.id and not triggered:
+                msg.update(event.message)
+                triggered = self.handle_message(msg)
 
-        obj = self.last_message_cache.get(event.message.channel_id)
-        if not obj:
-            return
-
-        msg, triggered = obj
-        if msg.id == event.message.id and not triggered:
-            msg.inplace_update(event.message)
-            triggered = self.handle_message(msg)
-
-            self.last_message_cache[msg.channel_id] = (msg, triggered)
+                self.last_message_cache[msg.channel_id] = (msg, triggered)
 
     def add_plugin(self, inst, config=None, ctx=None):
         """
@@ -498,10 +485,12 @@ class Bot(LoggingClass):
         mod = importlib.import_module(path)
         loaded = False
 
-        plugins = find_loadable_plugins(mod)
-        for plugin in plugins:
-            loaded = True
-            self.add_plugin(plugin, config)
+        for entry in map(lambda i: getattr(mod, i), dir(mod)):
+            if inspect.isclass(entry) and issubclass(entry, Plugin) and not entry == Plugin:
+                if getattr(entry, '_shallow', False) and Plugin in entry.__bases__:
+                    continue
+                loaded = True
+                self.add_plugin(entry, config)
 
         if not loaded:
             raise Exception('Could not find any plugins to load within module {}'.format(path))
@@ -515,9 +504,6 @@ class Bot(LoggingClass):
             self.config.plugin_config_dir, name) + '.' + self.config.plugin_config_format
 
         data = {}
-        if self.config.shared_config:
-            data.update(self.config.shared_config)
-
         if name in self.config.plugin_config:
             data.update(self.config.plugin_config[name])
 

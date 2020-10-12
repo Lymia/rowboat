@@ -8,7 +8,7 @@ from holster.enum import Enum
 
 from disco.types.base import (
     SlottedModel, Field, ListField, AutoDictField, snowflake, text,
-    datetime, enum, cached_property,
+    datetime, enum, cached_property
 )
 from disco.util.paginator import Paginator
 from disco.util.snowflake import to_snowflake
@@ -37,16 +37,13 @@ class Emoji(SlottedModel):
         The emoji ID (will be none if this is not a custom emoji).
     name : str
         The name of this emoji.
-    animated : bool
-        Whether this emoji is animated.
     """
     id = Field(snowflake)
     name = Field(text)
-    animated = Field(bool)
 
     @cached_property
     def custom(self):
-        return bool(self.id)
+        return self.id is not None
 
     def __eq__(self, other):
         if isinstance(other, Emoji):
@@ -180,7 +177,7 @@ class MessageEmbedAuthor(SlottedModel):
     name = Field(text)
     url = Field(text)
     icon_url = Field(text)
-    proxy_icon_url = Field(text)
+    icon_proxy_url = Field(text)
 
 
 class MessageEmbedField(SlottedModel):
@@ -221,8 +218,6 @@ class MessageEmbed(SlottedModel):
         The color of the embed.
     footer : `MessageEmbedFooter`
         The footer of the embed.
-    image : `MessageEmbedImage`
-        The image of the embed.
     thumbnail : `MessageEmbedThumbnail`
         The thumbnail of the embed.
     video : `MessageEmbedVideo`
@@ -346,7 +341,7 @@ class Message(SlottedModel):
         IDs for roles mentioned within this message.
     embeds : list[`MessageEmbed`]
         Embeds for this message.
-    attachments : dict[`MessageAttachment`]
+    attachments : list[`MessageAttachment`]
         Attachments for this message.
     reactions : list[`MessageReaction`]
         Reactions for this message.
@@ -511,22 +506,6 @@ class Message(SlottedModel):
             self.id,
             emoji,
             user)
-
-    def delete_single_reaction(self, emoji):
-        """
-        Deletes all reactions of a single emoji from a message.
-        Parameters
-        ----------
-        emoji : `Emoji`|str
-            An emoji or string representing an emoji
-        """
-        if isinstance(emoji, Emoji):
-            emoji = emoji.to_string()
-
-        self.client.api.channels_messages_reactions_delete_emoji(
-            self.channel_id,
-            self.id,
-            emoji)
 
     def is_mentioned(self, entity):
         """

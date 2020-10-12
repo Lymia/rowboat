@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import websocket
+import gevent
 import six
 
 from holster.emitter import Emitter
@@ -20,7 +21,7 @@ class Websocket(LoggingClass, websocket.WebSocketApp):
         LoggingClass.__init__(self)
         websocket.WebSocketApp.__init__(self, *args, **kwargs)
 
-        self.emitter = Emitter()
+        self.emitter = Emitter(gevent.spawn)
 
         # Hack to get events to emit
         for var in six.iterkeys(self.__dict__):
@@ -30,16 +31,12 @@ class Websocket(LoggingClass, websocket.WebSocketApp):
             setattr(self, var, var)
 
     def _get_close_args(self, data):
-        self.log.info("WS closed: "+repr(data))
-	__import__("traceback").print_stack()
         if data and len(data) >= 2:
             code = 256 * six.byte2int(data[0:1]) + six.byte2int(data[1:2])
             reason = data[2:].decode('utf-8')
             return [code, reason]
         return [None, None]
 
-    def on_close(self, a, b, c):
-        self._callback("on_close", a, b, c)
     def _callback(self, callback, *args):
         if not callback:
             return

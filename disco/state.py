@@ -3,13 +3,11 @@ import weakref
 
 from collections import deque, namedtuple
 from gevent.event import Event
-from holster.emitter import Priority
 
 from disco.types.base import UNSET
 from disco.util.config import Config
 from disco.util.string import underscore
 from disco.util.hashmap import HashMap, DefaultHashMap
-from disco.voice.client import VoiceState
 
 
 class StackMessage(namedtuple('StackMessage', ['id', 'channel_id', 'author_id'])):
@@ -51,9 +49,7 @@ class StateConfig(Config):
     sync_guild_members : bool
         If true, guilds will be automatically synced when they are initially loaded
         or joined. Generally this setting is OK for smaller bots, however bots in over
-        50 guilds will notice this operation can take a while to complete and may want
-        to batch requests using the underlying `GatewayClient.request_guild_members`
-        interface.
+        50 guilds will notice this operation can take a while to complete.
     """
     track_messages = True
     track_messages_size = 100
@@ -85,8 +81,6 @@ class State(object):
         Weak mapping of all known/loaded Channels
     users : dict(snowflake, `User`)
         Weak mapping of all known/loaded Users
-    voice_clients : dict(str, 'VoiceClient')
-        Weak mapping of all known voice clients
     voice_states : dict(str, `VoiceState`)
         Weak mapping of all known/active Voice States
     messages : Optional[dict(snowflake, deque)]
@@ -95,8 +89,8 @@ class State(object):
     EVENTS = [
         'Ready', 'GuildCreate', 'GuildUpdate', 'GuildDelete', 'GuildMemberAdd', 'GuildMemberRemove',
         'GuildMemberUpdate', 'GuildMembersChunk', 'GuildRoleCreate', 'GuildRoleUpdate', 'GuildRoleDelete',
-        'GuildEmojisUpdate', 'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceServerUpdate', 'VoiceStateUpdate',
-        'MessageCreate', 'PresenceUpdate',
+        'GuildEmojisUpdate', 'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceStateUpdate', 'MessageCreate',
+        'PresenceUpdate'
     ]
 
     def __init__(self, client, config):
@@ -111,7 +105,6 @@ class State(object):
         self.guilds = HashMap()
         self.channels = HashMap(weakref.WeakValueDictionary())
         self.users = HashMap(weakref.WeakValueDictionary())
-        self.voice_clients = HashMap(weakref.WeakValueDictionary())
         self.voice_states = HashMap(weakref.WeakValueDictionary())
 
         # If message tracking is enabled, listen to those events
@@ -139,7 +132,7 @@ class State(object):
 
         for event in self.EVENTS:
             func = 'on_' + underscore(event)
-            self.listeners.append(self.client.events.on(event, getattr(self, func), priority=Priority.BEFORE))
+            self.listeners.append(self.client.events.on(event, getattr(self, func)))
 
     def fill_messages(self, channel):
         for message in reversed(next(channel.messages_iter(bulk=True))):
@@ -202,23 +195,20 @@ class State(object):
             self.voice_states[voice_state.session_id] = voice_state
 
         if self.config.sync_guild_members:
-            event.guild.request_guild_members()
+            event.guild.sync()
 
     def on_guild_update(self, event):
         self.guilds[event.guild.id].inplace_update(event.guild, ignored=[
             'channels',
             'members',
             'voice_states',
-            'presences',
+            'presences'
         ])
 
     def on_guild_delete(self, event):
         if event.id in self.guilds:
             # Just delete the guild, channel references will fall
             del self.guilds[event.id]
-
-        if event.id in self.voice_clients:
-            self.voice_clients[event.id].disconnect()
 
     def on_channel_create(self, event):
         if event.channel.is_guild and event.channel.guild_id in self.guilds:
@@ -242,14 +232,6 @@ class State(object):
         elif event.channel.is_dm and event.channel.id in self.dms:
             del self.dms[event.channel.id]
 
-    def on_voice_server_update(self, event):
-        if event.guild_id not in self.voice_clients:
-            return
-
-        voice_client = self.voice_clients.get(event.guild_id)
-        voice_client.set_endpoint(event.endpoint)
-        voice_client.set_token(event.token)
-
     def on_voice_state_update(self, event):
         # Existing connection, we are either moving channels or disconnecting
         if event.state.session_id in self.voice_states:
@@ -265,29 +247,8 @@ class State(object):
         # New connection
         elif event.state.channel_id:
             if event.state.guild_id in self.guilds:
-                expired_voice_state = self.guilds[event.state.guild_id].voice_states.select_one(user_id=event.user_id)
-                if expired_voice_state:
-                    del self.guilds[event.state.guild_id].voice_states[expired_voice_state.session_id]
                 self.guilds[event.state.guild_id].voice_states[event.state.session_id] = event.state
-            expired_voice_state = self.voice_states.select_one(user_id=event.user_id)
-            if expired_voice_state:
-                del self.voice_states[expired_voice_state.session_id]
             self.voice_states[event.state.session_id] = event.state
-
-        if event.state.user_id != self.me.id:
-            return
-
-        server_id = event.state.guild_id or event.state.channel_id
-        if server_id in self.voice_clients:
-            voice_client = self.voice_clients[server_id]
-
-            voice_client.channel_id = event.state.channel_id
-            if not event.state.channel_id:
-                voice_client.disconnect()
-                return
-
-            if voice_client.token:
-                voice_client.set_state(VoiceState.CONNECTED)
 
     def on_guild_member_add(self, event):
         if event.member.user.id not in self.users:

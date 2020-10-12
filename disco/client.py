@@ -40,7 +40,7 @@ class ClientConfig(Config):
         should be either 'json' or 'etf'.
     """
 
-    token = ''
+    token = ""
     shard_id = 0
     shard_count = 1
     max_reconnects = 5
@@ -88,8 +88,8 @@ class Client(LoggingClass):
         super(Client, self).__init__()
         self.config = config
 
-        self.events = Emitter()
-        self.packets = Emitter()
+        self.events = Emitter(gevent.spawn)
+        self.packets = Emitter(gevent.spawn)
 
         self.api = APIClient(self.config.token, self)
         self.gw = GatewayClient(self, self.config.max_reconnects, self.config.encoder)
@@ -100,7 +100,7 @@ class Client(LoggingClass):
                 'client': self,
                 'state': self.state,
                 'api': self.api,
-                'gw': self.gw,
+                'gw': self.gw
             }
 
             self.manhole = DiscoBackdoorServer(self.config.manhole_bind,
