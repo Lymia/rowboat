@@ -44,8 +44,10 @@ class CensorSubConfig(SlottedModel):
     blocked_regex = ListField(lower, default=[])
     
     filter_level = Field(int, default=1000)
-    included_channels = ListField(snowflake, defualt=[])
+    included_channels = ListField(snowflake, default=[])
     excluded_channels = ListField(snowflake, default=[])
+    
+    always_ban = Field(bool, default=False)
 
     @cached_property
     def blocked_re(self):
@@ -195,7 +197,7 @@ class CensorPlugin(Plugin):
                         self.filter_domains(event, config)
 
                     if config.blocked_words or config.blocked_tokens:
-                        self.filter_blocked_words(event, config)
+                        self.filter_blocked_words(author, event, config)
             except Censorship as c:
                 self.call(
                     'ModLogPlugin.create_debounce',
@@ -281,6 +283,14 @@ class CensorPlugin(Plugin):
         blocked_words = config.blocked_re.findall(event.content)
 
         if blocked_words:
+            if config.always_ban:
+                Infraction.ban(
+                    self,
+                    event,
+                    author,
+                    'Bannable filtered words detected: '+str(blocked_words),
+                    event.guild)
+            
             raise Censorship(CensorReason.WORD, event, ctx={
                 'words': blocked_words,
             })
