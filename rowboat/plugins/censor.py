@@ -14,6 +14,7 @@ from rowboat.util.zalgo import ZALGO_RE
 from rowboat.plugins import RowboatPlugin as Plugin
 from rowboat.types import SlottedModel, Field, ListField, DictField, ChannelField, snowflake, lower
 from rowboat.types.plugin import PluginConfig
+from rowboat.models.user import Infraction
 from rowboat.models.message import Message
 from rowboat.plugins.modlog import Actions
 from rowboat.constants import INVITE_LINK_RE, URL_RE
@@ -42,6 +43,7 @@ class CensorSubConfig(SlottedModel):
     blocked_tokens = ListField(lower, default=[])
     blocked_regex = ListField(lower, default=[])
     
+    filter_level = Field(int, default=1000)
     included_channels = ListField(snowflake, defualt=[])
     excluded_channels = ListField(snowflake, default=[])
 
@@ -56,7 +58,7 @@ class CensorSubConfig(SlottedModel):
 
 class CensorConfig(PluginConfig):
     levels = DictField(int, CensorSubConfig)
-    channels = DictField(snowflake, CensorSubConfig)
+    filters = ListField(CensorSubConfig, default=[])
 
 
 # It's bad kids!
@@ -95,27 +97,18 @@ class Censorship(Exception):
 class CensorPlugin(Plugin):
     def compute_relevant_configs(self, event, author, bypass_levels=False):
         channel = event.message.channel if "message" in event.__dict__ else (event.msg.channel if "msg" in event.__dict__ else None)
+        user_level = int(self.bot.plugins.get('CorePlugin').get_level(event.guild, author)) if not bypass_levels else 0
 
-        if channel and channel.id in event.config.channels:
-            yield event.config.channels[channel.id]
-
-        if event.config.levels:
-            user_level = int(self.bot.plugins.get('CorePlugin').get_level(event.guild, author)) if not bypass_levels else 0
-
-            for level, config in event.config.levels.items():
-                if channel:
-                    #print(channel, channel.id, config.included_channels, config.excluded_channels, channel.id in config.included_channels, channel.id in config.excluded_channels)
-                    if len(config.included_channels) != 0:
-                        if not channel.id in config.included_channels:
-                                #print("continue")
-                                continue
-                    elif len(config.excluded_channels) != 0:
-                        if channel.id in config.excluded_channels:
-                                #print("continue")
-                                continue
-                if user_level <= level or bypass_levels:
-                    #print("added")
-                    yield config
+        for config in event.config.filters:
+            if channel:
+                if len(config.included_channels) != 0:
+                    if not channel.id in config.included_channels:
+                            continue
+                elif len(config.excluded_channels) != 0:
+                    if channel.id in config.excluded_channels:
+                            continue
+            if user_level <= config.filter_level or bypass_levels:
+                yield config
 
     def get_invite_info(self, code):
         if rdb.exists('inv:{}'.format(code)):
