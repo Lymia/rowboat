@@ -197,7 +197,7 @@ class CensorPlugin(Plugin):
                         self.filter_domains(event, config)
 
                     if config.blocked_words or config.blocked_tokens:
-                        self.filter_blocked_words(author, event, config)
+                        self.filter_blocked_words(event, config)
             except Censorship as c:
                 self.call(
                     'ModLogPlugin.create_debounce',
@@ -279,15 +279,15 @@ class CensorPlugin(Plugin):
                     'domain': parsed.netloc
                 })
 
-    def filter_blocked_words(self, author, event, config):
+    def filter_blocked_words(self, event, config):
         blocked_words = config.blocked_re.findall(event.content)
-
         if blocked_words:
             if config.always_ban:
+                member = event.guild.get_member(event.author)
                 Infraction.ban(
                     self,
                     event,
-                    author,
+                    member,
                     'Bannable filtered words detected: '+str(blocked_words),
                     event.guild)
             
