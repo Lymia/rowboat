@@ -279,7 +279,7 @@ class CensorPlugin(Plugin):
                     'domain': parsed.netloc
                 })
 
-    def filter_blocked_words(self, event, config):
+    def filter_blocked_words(self, author, event, config):
         blocked_words = config.blocked_re.findall(event.content)
 
         if blocked_words:
