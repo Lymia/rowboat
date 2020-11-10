@@ -631,8 +631,8 @@ class InfractionsPlugin(Plugin):
 
         raise CommandSuccess('kicked {} users'.format(len(members)))
 
-    @Plugin.command('ban', '<user:user|snowflake> [reason:str...]', level=CommandLevels.MOD)
-    @Plugin.command('forceban', '<user:snowflake> [reason:str...]', level=CommandLevels.MOD)
+    #@Plugin.command('ban', '<user:user|snowflake> [reason:str...]', level=CommandLevels.MOD)
+    @Plugin.command('ban', '<user:snowflake> [reason:str...]', level=CommandLevels.MOD)
     def ban(self, event, user, reason=None):
         member = None
 
